@@ -1,0 +1,142 @@
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab <span class="admin-badge">Admin</span></div>
+  <ul>
+    <li><a href="/admin">Dashboard</a></li>
+    <li><a href="/admin/desafios" class="nav-ativo">Desafios</a></li>
+    <li><a href="/admin/categorias">Categorias</a></li>
+    <li><a href="/admin/usuarios">Usuários</a></li>
+    <li><a href="/admin/comentarios">Comentários</a></li>
+    <li><a href="/dashboard">← Site</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <div class="avatar-inicial"><%= user.name.charAt(0).toUpperCase() %></div>
+    <%= user.name %>
+  </a>
+</nav>
+
+<div class="admin-page">
+
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="msg-sucesso"><%= messages.success[0] %></div>
+  <% } %>
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="msg-erro"><%= messages.error[0] %></div>
+  <% } %>
+
+  <div class="admin-titulo">
+    <h1>Desafios</h1>
+    <p>Cadastre e gerencie os desafios da plataforma</p>
+  </div>
+
+  <div class="admin-cols">
+
+    <div class="admin-form-card">
+      <h2>Novo Desafio</h2>
+      <form method="POST" action="/admin/desafios" enctype="multipart/form-data">
+
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" name="title" placeholder="Ex: Soma de Dois Números" required>
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea name="description" rows="4" placeholder="Descreva o desafio..." required style="width:100%;padding:8px 10px;border:1px solid #ccc;font-size:13px;resize:vertical;font-family:Arial,sans-serif;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Nível</label>
+          <select name="level" required style="width:100%;padding:8px 10px;border:1px solid #ccc;font-size:14px;">
+            <option value="">Selecione...</option>
+            <option value="Iniciante">Iniciante</option>
+            <option value="Intermediário">Intermediário</option>
+            <option value="Avançado">Avançado</option>
+            <option value="Expert">Expert</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Categoria</label>
+          <select name="categoryId" required style="width:100%;padding:8px 10px;border:1px solid #ccc;font-size:14px;">
+            <option value="">Selecione...</option>
+            <% categorias.forEach(function(c) { %>
+              <option value="<%= c.id %>"><%= c.name %></option>
+            <% }); %>
+          </select>
+          <% if (categorias.length === 0) { %>
+            <small style="color:#e67e22;">Nenhuma categoria. <a href="/admin/categorias">Criar categoria</a></small>
+          <% } %>
+        </div>
+
+        <div class="form-group">
+          <label>Imagem do desafio</label>
+          <input type="file" name="image" id="input-img-desafio" accept="image/*" style="width:100%;font-size:13px;">
+          <div id="preview-desafio" style="margin-top:8px;display:none;">
+            <img id="img-preview" src="" alt="preview" style="width:100%;max-height:120px;object-fit:cover;border:1px solid #ccc;">
+          </div>
+          <small style="color:#aaa;">Opcional · JPG, PNG, GIF, WebP · máx. 3MB</small>
+        </div>
+
+        <button type="submit" class="btn-admin-primary">+ Criar Desafio</button>
+      </form>
+    </div>
+
+    <div class="admin-tabela-card" style="flex:2;">
+      <div class="tabela-header">
+        <h2>Desafios Cadastrados (<%= desafios.length %>)</h2>
+      </div>
+
+      <% if (desafios.length > 0) { %>
+        <table class="admin-table">
+          <thead>
+            <tr><th>Imagem</th><th>Título</th><th>Nível</th><th>Ação</th></tr>
+          </thead>
+          <tbody>
+            <% desafios.forEach(function(d) { %>
+              <tr>
+                <td>
+                  <% if (d.image) { %>
+                    <img src="<%= d.image %>" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:3px;border:1px solid #eee;">
+                  <% } else { %>
+                    <div style="width:48px;height:36px;background:#e2e8f0;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8;">sem</div>
+                  <% } %>
+                </td>
+                <td><strong><%= d.title %></strong></td>
+                <td>
+                  <%
+                    var dLvl = 'iniciante';
+                    if (d.level === 'Intermediário') dLvl = 'intermediario';
+                    else if (d.level === 'Avançado') dLvl = 'avancado';
+                    else if (d.level === 'Expert') dLvl = 'expert';
+                  %>
+                  <span class="badge <%= dLvl %>"><%= d.level %></span>
+                </td>
+                <td>
+                  <form method="POST" action="/admin/desafios/<%= d.id %>/excluir" style="display:inline;" onsubmit="return confirm('Excluir este desafio?')">
+                    <button type="submit" class="btn-admin-danger">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div style="text-align:center;color:#aaa;padding:40px;">Nenhum desafio cadastrado ainda.</div>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.getElementById('input-img-desafio').addEventListener('change', function() {
+    var file = this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('img-preview').src = e.target.result;
+      document.getElementById('preview-desafio').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+</script>

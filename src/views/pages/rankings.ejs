@@ -1,0 +1,129 @@
+<!-- Navbar -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <ul>
+    <li><a href="/dashboard">Explorar</a></li>
+    <li><a href="/desafio/meus">Meus Desafios</a></li>
+    <li><a href="/rankings" class="nav-ativo">Rankings</a></li>
+    <li><a href="/comunidade">Comunidade</a></li>
+    <% if (user && user.role === 'admin') { %>
+      <li><a href="/admin" style="color:#e74c3c;font-weight:bold;">⚙ Admin</a></li>
+    <% } %>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <% if (user && user.photo) { %>
+      <img src="<%= user.photo %>" alt="foto" class="avatar-nav">
+    <% } else { %>
+      <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <% } %>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="ranking-page">
+
+  <div class="ranking-header">
+    <h1>&#127942; Rankings</h1>
+    <p>Os melhores resolvedores da plataforma</p>
+  </div>
+
+  <% if (ranking.length > 0) { %>
+
+    <!-- Top 3 em destaque -->
+    <div class="ranking-podio">
+      <% if (ranking[1]) { %>
+        <div class="podio-card prata">
+          <div class="podio-pos">2</div>
+          <div class="podio-avatar"><%= ranking[1].name.charAt(0).toUpperCase() %></div>
+          <div class="podio-nome"><%= ranking[1].name %></div>
+          <div class="podio-score"><%= ranking[1].totalScore %> pts</div>
+          <div class="podio-barra" style="height:80px; background:#C0C0C0;"></div>
+        </div>
+      <% } %>
+
+      <% if (ranking[0]) { %>
+        <div class="podio-card ouro">
+          <div class="podio-coroa">&#127775;</div>
+          <div class="podio-pos">1</div>
+          <div class="podio-avatar ouro-avatar"><%= ranking[0].name.charAt(0).toUpperCase() %></div>
+          <div class="podio-nome"><%= ranking[0].name %></div>
+          <div class="podio-score"><%= ranking[0].totalScore %> pts</div>
+          <div class="podio-barra" style="height:110px; background:#FFD700;"></div>
+        </div>
+      <% } %>
+
+      <% if (ranking[2]) { %>
+        <div class="podio-card bronze">
+          <div class="podio-pos">3</div>
+          <div class="podio-avatar"><%= ranking[2].name.charAt(0).toUpperCase() %></div>
+          <div class="podio-nome"><%= ranking[2].name %></div>
+          <div class="podio-score"><%= ranking[2].totalScore %> pts</div>
+          <div class="podio-barra" style="height:60px; background:#CD7F32;"></div>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Tabela completa -->
+    <div class="ranking-tabela">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th style="width:50px;">Pos.</th>
+            <th>Usuário</th>
+            <th>Desafios aceitos</th>
+            <th>Melhor score</th>
+            <th>Pontuação total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% ranking.forEach(function(u, i) { %>
+            <tr class="<%= user && u.id === user.id ? 'ranking-eu' : '' %>">
+              <td>
+                <% if (i === 0) { %>
+                  <span style="font-size:18px;">&#129351;</span>
+                <% } else if (i === 1) { %>
+                  <span style="font-size:18px;">&#129352;</span>
+                <% } else if (i === 2) { %>
+                  <span style="font-size:18px;">&#129353;</span>
+                <% } else { %>
+                  <span style="color:#aaa; font-weight:bold;">#<%= i + 1 %></span>
+                <% } %>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div class="ranking-avatar"><%= u.name.charAt(0).toUpperCase() %></div>
+                  <div>
+                    <strong><%= u.name %></strong>
+                    <% if (user && u.id === user.id) { %>
+                      <span style="font-size:11px;color:#2d8a4e;margin-left:6px;">← você</span>
+                    <% } %>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span style="font-weight:bold;color:#2d8a4e;"><%= u.solucoes %></span>
+                <span style="color:#aaa;font-size:12px;"> desafio<%= u.solucoes !== 1 ? 's' : '' %></span>
+              </td>
+              <td><strong><%= u.melhorScore %></strong>/100</td>
+              <td>
+                <div class="ranking-score-bar">
+                  <div class="ranking-score-fill" style="width:<%= Math.min(100, (u.totalScore / (ranking[0].totalScore || 1)) * 100) %>%"></div>
+                </div>
+                <strong><%= u.totalScore %></strong> pts
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+  <% } else { %>
+    <div class="ranking-vazio">
+      <div style="font-size:48px;margin-bottom:16px;">&#127942;</div>
+      <h2>Nenhum ranking ainda</h2>
+      <p>Resolva desafios e apareça aqui!</p>
+      <a href="/dashboard" class="btn-explorar">Explorar desafios</a>
+    </div>
+  <% } %>
+
+</div>

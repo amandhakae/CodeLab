@@ -1,0 +1,125 @@
+<!-- Navbar -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <ul>
+    <li><a href="/dashboard">Explorar</a></li>
+    <li><a href="/desafio/meus" class="nav-ativo">Meus Desafios</a></li>
+    <li><a href="/rankings">Rankings</a></li>
+    <li><a href="/comunidade">Comunidade</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <% if (user && user.photo) { %>
+      <img src="<%= user.photo %>" alt="foto" class="avatar-nav">
+    <% } else { %>
+      <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <% } %>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="meus-desafios-page">
+
+  <div class="meus-header">
+    <h1>Meus Desafios</h1>
+    <p>Desafios que você já tentou resolver</p>
+  </div>
+
+  <% if (desafiosRespondidos && desafiosRespondidos.length > 0) { %>
+
+    <!-- Estatísticas rápidas -->
+    <%
+      var totalTentativas = desafiosRespondidos.reduce(function(acc, d) { return acc + d.tentativas; }, 0);
+      var totalAceitos    = desafiosRespondidos.filter(function(d) { return d.ultimoStatus === 'accepted'; }).length;
+      var melhorGeral     = desafiosRespondidos.reduce(function(acc, d) { return d.melhorScore > acc ? d.melhorScore : acc; }, 0);
+    %>
+    <div class="meus-stats">
+      <div class="stat-card">
+        <div class="stat-valor"><%= desafiosRespondidos.length %></div>
+        <div class="stat-label">Desafios tentados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-valor"><%= totalAceitos %></div>
+        <div class="stat-label">Aceitos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-valor"><%= totalTentativas %></div>
+        <div class="stat-label">Total de submissões</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-valor"><%= melhorGeral %>/100</div>
+        <div class="stat-label">Melhor pontuação</div>
+      </div>
+    </div>
+
+    <!-- Lista de desafios respondidos -->
+    <div class="meus-lista">
+      <% desafiosRespondidos.forEach(function(entry) { %>
+        <div class="meus-card">
+
+          <!-- Badge de nível -->
+          <div class="meus-card-nivel">
+            <%
+              var eLvl = 'iniciante';
+              if (entry.challenge.level === 'Intermediário') eLvl = 'intermediario';
+              else if (entry.challenge.level === 'Avançado') eLvl = 'avancado';
+              else if (entry.challenge.level === 'Expert') eLvl = 'expert';
+            %>
+            <span class="badge <%= eLvl %>">
+              <%= entry.challenge.level %>
+            </span>
+          </div>
+
+          <!-- Info do desafio -->
+          <div class="meus-card-info">
+            <h3><%= entry.challenge.title %></h3>
+            <span class="meus-categoria"><%= entry.challenge.category %></span>
+          </div>
+
+          <!-- Melhor score -->
+          <div class="meus-card-score">
+            <div class="score-valor <%= entry.ultimoStatus %>-score">
+              <%= entry.melhorScore %><span style="font-size:12px; font-weight:normal;">/100</span>
+            </div>
+            <div class="score-label">Melhor score</div>
+          </div>
+
+          <!-- Status -->
+          <div class="meus-card-status">
+            <% if (entry.ultimoStatus === 'accepted') { %>
+              <span class="status-pill accepted">✅ Aceito</span>
+            <% } else if (entry.ultimoStatus === 'rejected') { %>
+              <span class="status-pill rejected">❌ Rejeitado</span>
+            <% } else { %>
+              <span class="status-pill pending">⏳ Pendente</span>
+            <% } %>
+            <div class="tentativas-label"><%= entry.tentativas %> tentativa<%= entry.tentativas !== 1 ? 's' : '' %></div>
+          </div>
+
+          <!-- Data -->
+          <div class="meus-card-data">
+            <div><%= entry.ultimaData ? new Date(entry.ultimaData).toLocaleDateString('pt-BR') : '—' %></div>
+            <div class="data-label">Última tentativa</div>
+          </div>
+
+          <!-- Botão -->
+          <a href="/desafio/<%= entry.challenge.id %>" class="btn-tentar-novo">
+            <%= entry.ultimoStatus === 'accepted' ? 'Ver' : 'Tentar novamente' %>
+          </a>
+
+        </div>
+      <% }); %>
+    </div>
+
+  <% } else { %>
+
+    <!-- Estado vazio -->
+    <div class="meus-vazio">
+      <div class="vazio-icone">&#128187;</div>
+      <h2>Nenhum desafio respondido ainda</h2>
+      <p>Explore os desafios e envie sua primeira solução!</p>
+      <a href="/dashboard" class="btn-explorar">Explorar desafios</a>
+    </div>
+
+  <% } %>
+
+</div>

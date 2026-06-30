@@ -1,0 +1,75 @@
+<!-- Navbar Admin -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab <span class="admin-badge">Admin</span></div>
+  <ul>
+    <li><a href="/admin">Dashboard</a></li>
+    <li><a href="/admin/desafios">Desafios</a></li>
+    <li><a href="/admin/categorias">Categorias</a></li>
+    <li><a href="/admin/usuarios" class="nav-ativo">Usuários</a></li>
+    <li><a href="/admin/comentarios">Comentários</a></li>
+    <li><a href="/dashboard">← Site</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <div class="avatar-inicial"><%= user.name.charAt(0).toUpperCase() %></div>
+    <%= user.name %>
+  </a>
+</nav>
+
+<div class="admin-page">
+
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="msg-sucesso"><%= messages.success[0] %></div>
+  <% } %>
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="msg-erro"><%= messages.error[0] %></div>
+  <% } %>
+
+  <div class="admin-titulo">
+    <h1>Usuários (<%= usuarios.length %>)</h1>
+    <p>Controle de acesso e roles dos usuários</p>
+  </div>
+
+  <div class="admin-tabela-card" style="max-width:100%;">
+    <% if (usuarios.length > 0) { %>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Nome</th><th>Email</th><th>Role</th><th>Cadastro</th><th>Ação</th></tr>
+        </thead>
+        <tbody>
+          <% usuarios.forEach(function(u) { %>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:32px;height:32px;border-radius:50%;background:#333;color:#fff;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <%= u.name.charAt(0).toUpperCase() %>
+                  </div>
+                  <strong><%= u.name %></strong>
+                  <% if (u.id === user.id) { %><span style="font-size:11px;color:#888;">(você)</span><% } %>
+                </div>
+              </td>
+              <td style="color:#777"><%= u.email %></td>
+              <td><span class="role-pill <%= u.role %>"><%= u.role %></span></td>
+              <td style="color:#aaa;font-size:12px;">
+                <%= u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-BR') : '—' %>
+              </td>
+              <td>
+                <% if (u.id !== user.id) { %>
+                  <form method="POST" action="/admin/usuarios/<%= u.id %>/role" style="display:inline;">
+                    <button type="submit" class="<%= u.role === 'admin' ? 'btn-admin-danger' : 'btn-admin-secondary' %>">
+                      <%= u.role === 'admin' ? 'Remover admin' : 'Tornar admin' %>
+                    </button>
+                  </form>
+                <% } else { %>
+                  <span style="font-size:12px;color:#ccc;">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div style="text-align:center;color:#aaa;padding:40px;">Nenhum usuário cadastrado.</div>
+    <% } %>
+  </div>
+
+</div>

@@ -1,0 +1,80 @@
+<!-- Navbar Admin -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab <span class="admin-badge">Admin</span></div>
+  <ul>
+    <li><a href="/admin">Dashboard</a></li>
+    <li><a href="/admin/desafios">Desafios</a></li>
+    <li><a href="/admin/categorias" class="nav-ativo">Categorias</a></li>
+    <li><a href="/admin/usuarios">Usuários</a></li>
+    <li><a href="/admin/comentarios">Comentários</a></li>
+    <li><a href="/dashboard">← Site</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <div class="avatar-inicial"><%= user.name.charAt(0).toUpperCase() %></div>
+    <%= user.name %>
+  </a>
+</nav>
+
+<div class="admin-page">
+
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="msg-sucesso"><%= messages.success[0] %></div>
+  <% } %>
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="msg-erro"><%= messages.error[0] %></div>
+  <% } %>
+
+  <div class="admin-titulo">
+    <h1>Categorias</h1>
+    <p>Gerencie as categorias dos desafios</p>
+  </div>
+
+  <div class="admin-cols">
+
+    <!-- Formulário de criação -->
+    <div class="admin-form-card">
+      <h2>Nova Categoria</h2>
+      <form method="POST" action="/admin/categorias">
+        <div class="form-group">
+          <label>Nome da Categoria</label>
+          <input type="text" name="name" placeholder="Ex: Algoritmos" required>
+        </div>
+        <button type="submit" class="btn-admin-primary">+ Criar Categoria</button>
+      </form>
+    </div>
+
+    <!-- Lista de categorias -->
+    <div class="admin-tabela-card" style="flex:2;">
+      <div class="tabela-header">
+        <h2>Categorias Cadastradas (<%= categorias.length %>)</h2>
+      </div>
+
+      <% if (categorias.length > 0) { %>
+        <table class="admin-table">
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>Criada em</th><th>Ação</th></tr>
+          </thead>
+          <tbody>
+            <% categorias.forEach(function(c) { %>
+              <tr>
+                <td style="color:#aaa">#<%= c.id %></td>
+                <td><strong><%= c.name %></strong></td>
+                <td style="color:#aaa; font-size:12px;">
+                  <%= c.createdAt ? new Date(c.createdAt).toLocaleDateString('pt-BR') : '—' %>
+                </td>
+                <td>
+                  <form method="POST" action="/admin/categorias/<%= c.id %>/excluir" style="display:inline;" onsubmit="return confirm('Excluir categoria \'<%= c.name %>\'?')">
+                    <button type="submit" class="btn-admin-danger">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div style="text-align:center;color:#aaa;padding:40px;">Nenhuma categoria cadastrada ainda.</div>
+      <% } %>
+    </div>
+
+  </div>
+</div>

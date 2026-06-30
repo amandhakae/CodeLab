@@ -1,0 +1,124 @@
+<!-- Navbar -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <ul>
+    <li><a href="/dashboard">Explorar</a></li>
+    <li><a href="/desafio/meus">Meus Desafios</a></li>
+    <li><a href="/rankings">Rankings</a></li>
+    <li><a href="/comunidade" class="nav-ativo">Comunidade</a></li>
+    <% if (user && user.role === 'admin') { %>
+      <li><a href="/admin" style="color:#e74c3c;font-weight:bold;">⚙ Admin</a></li>
+    <% } %>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <% if (user && user.photo) { %>
+      <img src="<%= user.photo %>" alt="foto" class="avatar-nav">
+    <% } else { %>
+      <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <% } %>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="comunidade-page">
+
+  <div class="comunidade-header">
+    <h1>&#127760; Comunidade</h1>
+    <p>Veja o que está acontecendo na plataforma</p>
+  </div>
+
+  <!-- Stats da plataforma -->
+  <div class="comunidade-stats">
+    <div class="com-stat">
+      <span class="com-stat-num"><%= stats.totalUsuarios %></span>
+      <span class="com-stat-label">Membros</span>
+    </div>
+    <div class="com-stat-sep"></div>
+    <div class="com-stat">
+      <span class="com-stat-num"><%= stats.totalSolucoes %></span>
+      <span class="com-stat-label">Soluções enviadas</span>
+    </div>
+    <div class="com-stat-sep"></div>
+    <div class="com-stat">
+      <span class="com-stat-num"><%= stats.aceitas %></span>
+      <span class="com-stat-label">Soluções aceitas</span>
+    </div>
+    <div class="com-stat-sep"></div>
+    <div class="com-stat">
+      <span class="com-stat-num"><%= stats.totalComentarios %></span>
+      <span class="com-stat-label">Comentários</span>
+    </div>
+  </div>
+
+  <div class="comunidade-cols">
+
+    <!-- Feed de comentários recentes -->
+    <div class="com-feed">
+      <h2 class="com-secao-titulo">&#128172; Avaliações Recentes</h2>
+
+      <% if (comentarios.length > 0) { %>
+        <% comentarios.forEach(function(c) { %>
+          <div class="com-item">
+            <div class="com-avatar"><%= (c.userName || 'A').charAt(0).toUpperCase() %></div>
+            <div class="com-corpo">
+              <div class="com-topo">
+                <strong><%= c.userName || 'Anônimo' %></strong>
+                <span class="com-estrelas">
+                  <% for (var i = 1; i <= 5; i++) { %><%= i <= c.rating ? '★' : '☆' %><% } %>
+                </span>
+                <span class="com-desafio">
+                  em <a href="/desafio/<%= c.challengeId %>">
+                    <%= DEMO_CHALLENGES[c.challengeId] ? DEMO_CHALLENGES[c.challengeId].title : 'Desafio #' + c.challengeId %>
+                  </a>
+                </span>
+              </div>
+              <p class="com-texto">"<%= c.content %>"</p>
+              <span class="com-data">
+                <%= c.createdAt ? new Date(c.createdAt).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' }) : '' %>
+              </span>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="com-vazio">Nenhuma avaliação ainda. Seja o primeiro!</div>
+      <% } %>
+    </div>
+
+    <!-- Feed de soluções aceitas recentes -->
+    <div class="com-feed" style="max-width:320px;">
+      <h2 class="com-secao-titulo">&#9989; Soluções Aceitas Recentes</h2>
+
+      <% if (solucoesAceitas.length > 0) { %>
+        <% solucoesAceitas.forEach(function(s) { %>
+          <div class="com-solucao">
+            <div class="com-avatar verde"><%= (usuariosMap[s.userId] || 'U').charAt(0).toUpperCase() %></div>
+            <div class="com-corpo">
+              <div class="com-topo">
+                <strong><%= usuariosMap[s.userId] || 'Usuário #' + s.userId %></strong>
+                <span class="com-score">+<%= s.score || 0 %> pts</span>
+              </div>
+              <p class="com-texto" style="margin:2px 0;">
+                resolveu
+                <a href="/desafio/<%= s.challengeId %>">
+                  <%= DEMO_CHALLENGES[s.challengeId] ? DEMO_CHALLENGES[s.challengeId].title : 'Desafio #' + s.challengeId %>
+                </a>
+              </p>
+              <span class="com-data">
+                <%= s.createdAt ? new Date(s.createdAt).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' }) : '' %>
+              </span>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="com-vazio">Nenhuma solução aceita ainda.</div>
+      <% } %>
+
+      <!-- CTA -->
+      <div style="margin-top:20px;text-align:center;padding:16px;background:#f9f9f9;border:1px solid #eee;">
+        <p style="font-size:13px;color:#666;margin:0 0 10px;">Quer aparecer aqui?</p>
+        <a href="/dashboard" class="btn-resolver" style="font-size:13px;padding:8px 20px;">Resolver um desafio</a>
+      </div>
+    </div>
+
+  </div>
+</div>

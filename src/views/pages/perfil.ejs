@@ -1,0 +1,84 @@
+<!-- Navbar -->
+<nav class="perfil-nav">
+  <a href="/dashboard" class="logo">&lt;/&gt; CodeLab</a>
+  <a href="/dashboard" class="voltar">&#8592; Voltar ao Dashboard</a>
+</nav>
+
+<div class="perfil-wrapper">
+  <div class="perfil-card">
+
+    <!-- Mensagens -->
+    <% if (messages.success && messages.success.length > 0) { %>
+      <div class="msg-sucesso"><%= messages.success[0] %></div>
+    <% } %>
+    <% if (messages.error && messages.error.length > 0) { %>
+      <div class="msg-erro"><%= messages.error[0] %></div>
+    <% } %>
+
+    <form action="/perfil" method="POST" enctype="multipart/form-data">
+
+      <!-- Foto de perfil -->
+      <div class="perfil-foto-area">
+        <% if (user.photo) { %>
+          <img src="<%= user.photo %>" alt="Foto de perfil" class="perfil-foto" id="preview-foto">
+        <% } else { %>
+          <div class="perfil-foto-inicial" id="inicial-foto">
+            <%= user.name.charAt(0).toUpperCase() %>
+          </div>
+          <img src="" alt="" class="perfil-foto" id="preview-foto" style="display:none;">
+        <% } %>
+
+        <label for="input-foto" class="perfil-foto-label">Alterar foto de perfil</label>
+        <input type="file" name="photo" id="input-foto" accept="image/*">
+      </div>
+
+      <!-- Nota média -->
+      <div class="perfil-rating">
+        <div class="estrelas">
+          <% var nota = user.rating || 0; %>
+          <% for (var i = 1; i <= 5; i++) { %>
+            <%= i <= Math.round(nota) ? '★' : '☆' %>
+          <% } %>
+        </div>
+        <div class="nota"><%= nota > 0 ? nota.toFixed(1) : '—' %></div>
+        <small>Nota média nos desafios</small>
+      </div>
+
+      <!-- Nome -->
+      <div class="form-group">
+        <label>Nome de usuário</label>
+        <input type="text" name="name" value="<%= user.name %>" required>
+      </div>
+
+      <!-- Email (só leitura) -->
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" value="<%= user.email %>" disabled>
+      </div>
+
+      <button type="submit" class="btn-salvar">Salvar alterações</button>
+    </form>
+
+    <!-- Logout fora do form -->
+    <a href="/auth/logout" class="btn-logout-perfil">Logout</a>
+
+  </div>
+</div>
+
+<script>
+  document.getElementById('input-foto').addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var preview = document.getElementById('preview-foto');
+      var inicial = document.getElementById('inicial-foto');
+
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      if (inicial) inicial.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+</script>

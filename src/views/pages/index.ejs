@@ -1,0 +1,190 @@
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <ul>
+    <li><a href="/dashboard" class="nav-ativo">Explorar</a></li>
+    <li><a href="/desafio/meus">Meus Desafios</a></li>
+    <li><a href="/rankings">Rankings</a></li>
+    <li><a href="/comunidade">Comunidade</a></li>
+    <% if (user && user.role === 'admin') { %>
+      <li><a href="/admin" style="color:#e74c3c;font-weight:bold;">⚙ Admin</a></li>
+    <% } %>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <% if (user && user.photo) { %>
+      <img src="<%= user.photo %>" alt="foto" class="avatar-nav">
+    <% } else { %>
+      <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <% } %>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="container">
+
+  <div class="sidebar">
+    <h4>Níveis</h4>
+    <label><input type="checkbox" class="filtro-nivel" value="Iniciante"> Iniciante</label>
+    <label><input type="checkbox" class="filtro-nivel" value="Intermediário"> Intermediário</label>
+    <label><input type="checkbox" class="filtro-nivel" value="Avançado"> Avançado</label>
+    <label><input type="checkbox" class="filtro-nivel" value="Expert"> Expert</label>
+
+    <h4 class="separador">Categorias</h4>
+    <label><input type="checkbox" class="filtro-categoria" value="Algoritmos"> Algoritmos</label>
+    <label><input type="checkbox" class="filtro-categoria" value="Estruturas de Dados"> Estrut. de Dados</label>
+    <label><input type="checkbox" class="filtro-categoria" value="Front-end"> Front-end</label>
+    <label><input type="checkbox" class="filtro-categoria" value="Back-end"> Back-end</label>
+    <label><input type="checkbox" class="filtro-categoria" value="Banco de Dados"> Banco de Dados</label>
+    <label><input type="checkbox" class="filtro-categoria" value="Outros"> Outros</label>
+  </div>
+
+  <div class="main">
+
+    <div class="filtros">
+      <input type="text" id="busca" placeholder="Buscar desafios...">
+      <label>Ordenar por
+        <select id="select-ordem">
+          <option value="recentes">Mais Recentes</option>
+          <option value="avaliados">Mais Avaliados</option>
+          <option value="comentados">Mais Comentados</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="cards" id="lista-cards">
+
+      <% if (challenges && challenges.length > 0) { %>
+        <% challenges.forEach(function(challenge) {
+          var lvl = 'iniciante';
+          if (challenge.level === 'Intermediário') lvl = 'intermediario';
+          else if (challenge.level === 'Avançado') lvl = 'avancado';
+          else if (challenge.level === 'Expert') lvl = 'expert';
+        %>
+          <div class="card"
+            data-id="<%= challenge.id %>"
+            data-level="<%= challenge.level %>"
+            data-categoria="<%= challenge.category %>"
+            data-rating="<%= challenge.rating || 0 %>"
+            data-comments="<%= challenge.commentsCount || 0 %>"
+            data-ordem="<%= challenge.ordem || 1 %>">
+
+            <div class="card-img">
+              <% if (challenge.image) { %>
+                <img src="<%= challenge.image %>" alt="<%= challenge.title %>" class="card-img-foto">
+              <% } else { %>
+                <div class="card-img-placeholder nivel-<%= lvl %>">
+                  <span>{ }</span>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="card-body">
+              <h3><%= challenge.title %></h3>
+              <div class="tags">
+                <span class="tag <%= lvl %>"><%= challenge.level %></span>
+                <span class="tag"><%= challenge.category %></span>
+              </div>
+              <p>
+                <%= challenge.description ? challenge.description.substring(0, 75) + '...' : '' %>
+              </p>
+              <div class="card-rodape">
+                <span>&#9733; <%= challenge.rating > 0 ? parseFloat(challenge.rating).toFixed(1) : '—' %> &nbsp; &#128172; <%= challenge.commentsCount || 0 %></span>
+                <a href="/desafio/<%= challenge.id %>" class="btn-resolver">Resolver</a>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="sem-resultados">Nenhum desafio cadastrado ainda.</div>
+      <% } %>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var busca       = document.getElementById('busca');
+  var selectOrdem = document.getElementById('select-ordem');
+
+  busca.addEventListener('input', aplicarFiltros);
+  selectOrdem.addEventListener('change', ordenarEFiltrar);
+
+  document.querySelectorAll('.filtro-nivel, .filtro-categoria').forEach(function(cb) {
+    cb.addEventListener('change', aplicarFiltros);
+  });
+
+  function getNiveisMarcados() {
+    var niveis = [];
+    document.querySelectorAll('.filtro-nivel:checked').forEach(function(cb) {
+      niveis.push(cb.value);
+    });
+    return niveis;
+  }
+
+  function getCategoriasMarcadas() {
+    var cats = [];
+    document.querySelectorAll('.filtro-categoria:checked').forEach(function(cb) {
+      cats.push(cb.value);
+    });
+    return cats;
+  }
+
+  function aplicarFiltros() {
+    var texto      = busca.value.toLowerCase().trim();
+    var niveis     = getNiveisMarcados();
+    var categorias = getCategoriasMarcadas();
+    var cards      = document.querySelectorAll('#lista-cards .card');
+    var visiveis   = 0;
+
+    cards.forEach(function(card) {
+      var titulo    = card.querySelector('h3').textContent.toLowerCase();
+      var nivel     = card.getAttribute('data-level');
+      var categoria = card.getAttribute('data-categoria');
+
+      var passaBusca     = texto === '' || titulo.indexOf(texto) !== -1;
+      var passaNivel     = niveis.length === 0 || niveis.indexOf(nivel) !== -1;
+      var passaCategoria = categorias.length === 0 || categorias.indexOf(categoria) !== -1;
+
+      if (passaBusca && passaNivel && passaCategoria) {
+        card.style.display = '';
+        visiveis++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    var msgVazia = document.getElementById('msg-vazia');
+    if (visiveis === 0) {
+      if (!msgVazia) {
+        var msg = document.createElement('div');
+        msg.id = 'msg-vazia';
+        msg.className = 'sem-resultados';
+        msg.textContent = 'Nenhum desafio encontrado.';
+        document.getElementById('lista-cards').appendChild(msg);
+      }
+    } else {
+      if (msgVazia) msgVazia.remove();
+    }
+  }
+
+  function ordenarEFiltrar() {
+    var criterio  = selectOrdem.value;
+    var container = document.getElementById('lista-cards');
+    var cards     = Array.from(container.querySelectorAll('.card'));
+
+    cards.sort(function(a, b) {
+      if (criterio === 'avaliados') {
+        return parseFloat(b.getAttribute('data-rating')) - parseFloat(a.getAttribute('data-rating'));
+      }
+      if (criterio === 'comentados') {
+        return parseInt(b.getAttribute('data-comments')) - parseInt(a.getAttribute('data-comments'));
+      }
+      return parseInt(a.getAttribute('data-ordem')) - parseInt(b.getAttribute('data-ordem'));
+    });
+
+    cards.forEach(function(card) {
+      container.appendChild(card);
+    });
+
+    aplicarFiltros();
+  }
+</script>

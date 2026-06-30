@@ -1,0 +1,241 @@
+<!-- Navbar -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <a href="/dashboard" class="voltar">&#8592; Voltar para Desafios</a>
+  <a href="/perfil" class="usuario">
+    <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="page-desafio">
+
+  <!-- Flash -->
+  <% if (messages && messages.success && messages.success.length > 0) { %>
+    <% messages.success.forEach(function(msg) { %>
+      <div class="flash success"><%= msg %></div>
+    <% }); %>
+  <% } %>
+  <% if (messages && messages.error && messages.error.length > 0) { %>
+    <% messages.error.forEach(function(msg) { %>
+      <div class="flash error"><%= msg %></div>
+    <% }); %>
+  <% } %>
+
+  <!-- Header do Desafio -->
+  <div class="desafio-header">
+    <% if (challenge.image) { %>
+      <img src="<%= challenge.image %>" alt="<%= challenge.title %>" class="desafio-imagem">
+    <% } %>
+    <h1><%= challenge.title %></h1>
+    <div class="desafio-meta">
+      <span class="badge <%= challenge.level.toLowerCase().replace('é', 'e').replace('ã', 'a') %>"><%= challenge.level %></span>
+      <span class="badge categoria"><%= challenge.category || challenge.categoryName || 'Geral' %></span>
+      <% if (challenge.rating) { %>
+        <span style="font-size:13px; color:#777;">&#9733; <%= challenge.rating %></span>
+      <% } %>
+    </div>
+    <p class="desafio-desc"><%= challenge.description %></p>
+  </div>
+
+  <!-- Editor de Código -->
+  <div class="editor-section">
+    <form method="POST" action="/desafio/<%= challenge.id %>/submit" id="form-solucao">
+      <div class="editor-header">
+        <h2>&#128187; Sua Solução</h2>
+        <select name="language" id="language">
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="csharp">C#</option>
+        </select>
+      </div>
+
+      <textarea
+        name="code"
+        id="code"
+        placeholder="// Escreva sua solução aqui..."
+        spellcheck="false"
+      ></textarea>
+
+      <div class="editor-footer">
+        <span id="status-enviando" style="font-size:13px; color:#888; display:none;">Enviando...</span>
+        <button type="submit" class="btn-enviar" id="btn-submit">
+          &#9658; Enviar Solução
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Histórico de Submissões -->
+  <div class="historico" id="historico">
+    <h2>&#128203; Histórico de Submissões</h2>
+
+    <% if (solutions && solutions.length > 0) { %>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Linguagem</th>
+            <th>Código</th>
+            <th>Status</th>
+            <th>Pontuação</th>
+            <th>Enviado em</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% solutions.forEach(function(s, i) { %>
+            <tr>
+              <td><%= solutions.length - i %></td>
+              <td><%= s.language || '—' %></td>
+              <td><span class="code-preview"><%= s.code %></span></td>
+              <td>
+                <span class="status-<%= s.status %>">
+                  <%= s.status === 'accepted' ? '✅ Aceito' : s.status === 'rejected' ? '❌ Rejeitado' : '⏳ Pendente' %>
+                </span>
+              </td>
+              <td><%= s.score != null ? s.score + '/100' : '—' %></td>
+              <td><%= s.createdAt ? new Date(s.createdAt).toLocaleString('pt-BR') : '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div class="sem-historico">Nenhuma submissão ainda. Envie sua primeira solução acima!</div>
+    <% } %>
+  </div>
+
+</div>
+
+  <!-- Comentários e Avaliação -->
+  <div class="comentarios" id="comentarios">
+
+    <div class="comentarios-header">
+      <h2>&#128172; Comentários e Avaliações</h2>
+      <% if (comments && comments.length > 0) { %>
+        <div class="media-avaliacao">
+          <span class="nota-grande"><%= avgRating %></span>
+          <div>
+            <div class="estrelas-media">
+              <% for (var i = 1; i <= 5; i++) { %>
+                <%= i <= Math.round(avgRating) ? '★' : '☆' %>
+              <% } %>
+            </div>
+            <div style="font-size:11px; color:#aaa;"><%= comments.length %> avaliação<%= comments.length !== 1 ? 'ões' : '' %></div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Formulário de comentário -->
+    <div class="form-comentario">
+      <h3>Deixe sua avaliação</h3>
+      <form method="POST" action="/desafio/<%= challenge.id %>/comentar">
+
+        <!-- Estrelas -->
+        <div class="rating-input" id="rating-input">
+          <input type="radio" name="rating" id="star5" value="5">
+          <label for="star5" title="5 estrelas">&#9733;</label>
+          <input type="radio" name="rating" id="star4" value="4">
+          <label for="star4" title="4 estrelas">&#9733;</label>
+          <input type="radio" name="rating" id="star3" value="3">
+          <label for="star3" title="3 estrelas">&#9733;</label>
+          <input type="radio" name="rating" id="star2" value="2">
+          <label for="star2" title="2 estrelas">&#9733;</label>
+          <input type="radio" name="rating" id="star1" value="1">
+          <label for="star1" title="1 estrela">&#9733;</label>
+        </div>
+        <div id="rating-erro" style="font-size:12px; color:red; margin-bottom:8px; display:none;">
+          Selecione uma avaliação antes de enviar.
+        </div>
+
+        <textarea
+          name="content"
+          placeholder="Compartilhe sua experiência com este desafio..."
+          rows="3"
+        ></textarea>
+
+        <button type="submit" class="btn-comentar">Enviar avaliação</button>
+      </form>
+    </div>
+
+    <!-- Lista de comentários -->
+    <div class="lista-comentarios">
+      <% if (comments && comments.length > 0) { %>
+        <% comments.forEach(function(c) { %>
+          <div class="comentario-item">
+            <div class="comentario-avatar">
+              <%= (c.userName || 'A').charAt(0).toUpperCase() %>
+            </div>
+            <div class="comentario-corpo">
+              <div class="comentario-topo">
+                <span class="comentario-autor"><%= c.userName || 'Anônimo' %></span>
+                <span class="comentario-estrelas">
+                  <% for (var i = 1; i <= 5; i++) { %>
+                    <%= i <= c.rating ? '★' : '☆' %>
+                  <% } %>
+                </span>
+                <span class="comentario-data">
+                  <%= c.createdAt ? new Date(c.createdAt).toLocaleDateString('pt-BR') : '' %>
+                </span>
+              </div>
+              <p class="comentario-texto"><%= c.content %></p>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="sem-comentarios">
+          Nenhum comentário ainda. Seja o primeiro a avaliar este desafio!
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  var form   = document.getElementById('form-solucao');
+  var btn    = document.getElementById('btn-submit');
+  var status = document.getElementById('status-enviando');
+
+  form.addEventListener('submit', function(e) {
+    var code = document.getElementById('code').value.trim();
+    if (!code) {
+      e.preventDefault();
+      alert('Por favor, escreva sua solução antes de enviar.');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    status.style.display = 'inline';
+  });
+
+  var flash = document.querySelector('.flash');
+  if (flash) {
+    flash.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Validação do formulário de comentário
+  var formComentario = document.querySelector('.form-comentario form');
+  var ratingErro     = document.getElementById('rating-erro');
+
+  formComentario.addEventListener('submit', function(e) {
+    var ratingMarcado = document.querySelector('input[name="rating"]:checked');
+    if (!ratingMarcado) {
+      e.preventDefault();
+      ratingErro.style.display = 'block';
+      document.getElementById('rating-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    ratingErro.style.display = 'none';
+  });
+
+  // Esconder erro ao selecionar estrela
+  document.querySelectorAll('input[name="rating"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      ratingErro.style.display = 'none';
+    });
+  });
+</script>

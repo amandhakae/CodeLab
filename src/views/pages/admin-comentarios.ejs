@@ -1,0 +1,71 @@
+<!-- Navbar Admin -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab <span class="admin-badge">Admin</span></div>
+  <ul>
+    <li><a href="/admin">Dashboard</a></li>
+    <li><a href="/admin/desafios">Desafios</a></li>
+    <li><a href="/admin/categorias">Categorias</a></li>
+    <li><a href="/admin/usuarios">Usuários</a></li>
+    <li><a href="/admin/comentarios" class="nav-ativo">Comentários</a></li>
+    <li><a href="/dashboard">← Site</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <div class="avatar-inicial"><%= user.name.charAt(0).toUpperCase() %></div>
+    <%= user.name %>
+  </a>
+</nav>
+
+<div class="admin-page">
+
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="msg-sucesso"><%= messages.success[0] %></div>
+  <% } %>
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="msg-erro"><%= messages.error[0] %></div>
+  <% } %>
+
+  <div class="admin-titulo">
+    <h1>Comentários (<%= comentarios.length %>)</h1>
+    <p>Moderação de comentários e avaliações</p>
+  </div>
+
+  <div class="admin-tabela-card" style="max-width:100%;">
+    <% if (comentarios.length > 0) { %>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Usuário</th><th>Desafio</th><th>Avaliação</th><th>Comentário</th><th>Data</th><th>Ação</th></tr>
+        </thead>
+        <tbody>
+          <% comentarios.forEach(function(c) { %>
+            <tr>
+              <td><strong><%= c.userName || 'Anônimo' %></strong></td>
+              <td style="color:#777;">Desafio #<%= c.challengeId %></td>
+              <td>
+                <span style="color:#f5a623;">
+                  <% for (var i = 1; i <= 5; i++) { %><%= i <= c.rating ? '★' : '☆' %><% } %>
+                </span>
+                <span style="font-size:12px;color:#777;"> (<%= c.rating %>/5)</span>
+              </td>
+              <td style="max-width:300px;">
+                <span style="font-size:13px;color:#444;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  <%= c.content %>
+                </span>
+              </td>
+              <td style="color:#aaa;font-size:12px;white-space:nowrap;">
+                <%= c.createdAt ? new Date(c.createdAt).toLocaleDateString('pt-BR') : '—' %>
+              </td>
+              <td>
+                <form method="POST" action="/admin/comentarios/<%= c.id %>/excluir" style="display:inline;" onsubmit="return confirm('Excluir este comentário?')">
+                  <button type="submit" class="btn-admin-danger">Excluir</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div style="text-align:center;color:#aaa;padding:40px;">Nenhum comentário para moderar.</div>
+    <% } %>
+  </div>
+
+</div>

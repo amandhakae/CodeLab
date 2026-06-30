@@ -1,0 +1,160 @@
+<!-- Navbar Admin -->
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab <span class="admin-badge">Admin</span></div>
+  <ul>
+    <li><a href="/admin" class="nav-ativo">Dashboard</a></li>
+    <li><a href="/admin/desafios">Desafios</a></li>
+    <li><a href="/admin/categorias">Categorias</a></li>
+    <li><a href="/admin/usuarios">Usuários</a></li>
+    <li><a href="/admin/comentarios">Comentários</a></li>
+    <li><a href="/dashboard">← Site</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <div class="avatar-inicial"><%= user.name.charAt(0).toUpperCase() %></div>
+    <%= user.name %>
+  </a>
+</nav>
+
+<div class="admin-page">
+
+  <!-- Flash -->
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="msg-sucesso"><%= messages.success[0] %></div>
+  <% } %>
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="msg-erro"><%= messages.error[0] %></div>
+  <% } %>
+
+  <div class="admin-titulo">
+    <h1>Dashboard</h1>
+    <p>Visão geral da plataforma</p>
+  </div>
+
+  <!-- Cards de estatísticas -->
+  <div class="admin-stats">
+
+    <div class="admin-stat-card">
+      <div class="stat-icone" style="background:#e8f4fd;">&#128100;</div>
+      <div class="stat-info">
+        <div class="stat-num"><%= stats.totalUsuarios %></div>
+        <div class="stat-desc">Usuários cadastrados</div>
+      </div>
+    </div>
+
+    <div class="admin-stat-card">
+      <div class="stat-icone" style="background:#e8f9f0;">&#128187;</div>
+      <div class="stat-info">
+        <div class="stat-num"><%= stats.totalDesafios %></div>
+        <div class="stat-desc">Desafios</div>
+      </div>
+    </div>
+
+    <div class="admin-stat-card">
+      <div class="stat-icone" style="background:#fef9e7;">&#128196;</div>
+      <div class="stat-info">
+        <div class="stat-num"><%= stats.totalSolucoes %></div>
+        <div class="stat-desc">Soluções enviadas</div>
+      </div>
+    </div>
+
+    <div class="admin-stat-card">
+      <div class="stat-icone" style="background:#fdf2f8;">&#128172;</div>
+      <div class="stat-info">
+        <div class="stat-num"><%= stats.totalComentarios %></div>
+        <div class="stat-desc">Comentários</div>
+      </div>
+    </div>
+
+    <div class="admin-stat-card">
+      <div class="stat-icone" style="background:#e8f9f0;">&#9989;</div>
+      <div class="stat-info">
+        <div class="stat-num"><%= stats.taxaAceitacao %>%</div>
+        <div class="stat-desc">Taxa de aceitação</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="admin-cols">
+
+    <!-- Usuários recentes -->
+    <div class="admin-tabela-card">
+      <div class="tabela-header">
+        <h2>Usuários Recentes</h2>
+        <a href="/admin/usuarios" class="link-ver-todos">Ver todos →</a>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Nome</th><th>Email</th><th>Role</th><th>Cadastro</th></tr>
+        </thead>
+        <tbody>
+          <% if (usuariosRecentes.length > 0) { %>
+            <% usuariosRecentes.forEach(function(u) { %>
+              <tr>
+                <td><strong><%= u.name %></strong></td>
+                <td style="color:#777"><%= u.email %></td>
+                <td>
+                  <span class="role-pill <%= u.role %>"><%= u.role %></span>
+                </td>
+                <td style="color:#aaa; font-size:12px;">
+                  <%= u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-BR') : '—' %>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px;">Nenhum usuário ainda</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Soluções recentes -->
+    <div class="admin-tabela-card">
+      <div class="tabela-header">
+        <h2>Soluções Recentes</h2>
+        <a href="/admin/comentarios" class="link-ver-todos">Ver comentários →</a>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Usuário ID</th><th>Desafio ID</th><th>Status</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+          <% if (solucoesRecentes.length > 0) { %>
+            <% solucoesRecentes.forEach(function(s) { %>
+              <tr>
+                <td>#<%= s.userId %></td>
+                <td>#<%= s.challengeId %></td>
+                <td><span class="status-<%= s.status %>"><%= s.status %></span></td>
+                <td><strong><%= s.score || 0 %></strong>/100</td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px;">Nenhuma solução ainda</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Atalhos rápidos -->
+  <div class="admin-atalhos">
+    <a href="/admin/desafios" class="atalho-card">
+      <span>&#128187;</span>
+      <div>Gerenciar Desafios</div>
+    </a>
+    <a href="/admin/categorias" class="atalho-card">
+      <span>&#127991;</span>
+      <div>Gerenciar Categorias</div>
+    </a>
+    <a href="/admin/usuarios" class="atalho-card">
+      <span>&#128101;</span>
+      <div>Controlar Usuários</div>
+    </a>
+    <a href="/admin/comentarios" class="atalho-card">
+      <span>&#128172;</span>
+      <div>Moderar Comentários</div>
+    </a>
+  </div>
+
+</div>

@@ -1,0 +1,97 @@
+<div class="page-login">
+  <div class="auth-card">
+    <div class="auth-logo">&lt;/&gt; CodeLab</div>
+
+    <!-- Mensagem de erro -->
+    <% if (messages.error && messages.error.length > 0) { %>
+      <div class="msg-erro"><%= messages.error[0] %></div>
+    <% } %>
+
+    <!-- Abas -->
+    <div class="auth-tabs">
+      <button id="tab-entrar" class="ativo" onclick="mostrarAba('entrar')">Entrar</button>
+      <button id="tab-cadastrar" onclick="mostrarAba('cadastrar')">Cadastrar</button>
+    </div>
+
+    <!-- Formulário de Login -->
+    <form id="form-entrar" action="/auth/login" method="POST">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="Digite seu email" required>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="senha-wrapper">
+          <input type="password" id="senha-login" name="password" placeholder="Digite sua senha" required>
+          <button type="button" onclick="verSenha('senha-login', this)">&#128065;</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-auth">Entrar</button>
+      <div class="auth-link">
+        Não tem conta? <a onclick="mostrarAba('cadastrar')">Cadastrar</a>
+      </div>
+    </form>
+
+    <!-- Formulário de Cadastro -->
+    <form id="form-cadastrar" class="form-hidden" action="/auth/register" method="POST">
+      <div class="form-group">
+        <label>Nome completo</label>
+        <input type="text" name="name" placeholder="Digite seu nome" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="Digite seu email" required>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="senha-wrapper">
+          <input type="password" id="senha-cad" name="password" placeholder="Digite sua senha" required>
+          <button type="button" onclick="verSenha('senha-cad', this)">&#128065;</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar senha</label>
+        <div class="senha-wrapper">
+          <input type="password" id="senha-cad2" name="confirmPassword" placeholder="Confirme sua senha" required>
+          <button type="button" onclick="verSenha('senha-cad2', this)">&#128065;</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-auth">Cadastrar</button>
+      <div class="auth-link">
+        Já tem uma conta? <a onclick="mostrarAba('entrar')">Entrar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function mostrarAba(aba) {
+    var formEntrar    = document.getElementById('form-entrar');
+    var formCadastrar = document.getElementById('form-cadastrar');
+    var tabEntrar     = document.getElementById('tab-entrar');
+    var tabCadastrar  = document.getElementById('tab-cadastrar');
+
+    if (aba === 'entrar') {
+      formEntrar.classList.remove('form-hidden');
+      formCadastrar.classList.add('form-hidden');
+      tabEntrar.classList.add('ativo');
+      tabCadastrar.classList.remove('ativo');
+    } else {
+      formCadastrar.classList.remove('form-hidden');
+      formEntrar.classList.add('form-hidden');
+      tabCadastrar.classList.add('ativo');
+      tabEntrar.classList.remove('ativo');
+    }
+  }
+
+  function verSenha(inputId, btn) {
+    var input = document.getElementById(inputId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '&#128064;';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '&#128065;';
+    }
+  }
+</script>
