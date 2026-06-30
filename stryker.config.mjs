@@ -6,6 +6,7 @@ export default {
   },
   mutate: [
     'src/modules/solutions/solutions.service.js',
+    'src/modules/solutions/solutions.controller.js',
     'src/modules/auth/auth.service.js',
   ],
   coverageAnalysis: 'perTest',

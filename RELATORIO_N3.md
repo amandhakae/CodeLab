@@ -181,6 +181,106 @@ O principal problema foi que os testes E2E precisam de servidor rodando com banc
 
 ---
 
+## Diagrama de Arquitetura — Camadas e Tipos de Teste
+
+```mermaid
+graph TD
+    subgraph E2E["E2E — Playwright"]
+        Browser["Browser (Chrome)"]
+    end
+
+    subgraph HTTP["Integração — Supertest"]
+        Routes["Routes (.routes.js)"]
+        Controller["Controller (.controller.js)"]
+        Middleware["Middleware (requireAuth)"]
+    end
+
+    subgraph Business["Unitário — Vitest + vi.mock()"]
+        Service["Service (.service.js)"]
+    end
+
+    subgraph Data["Unitário — Vitest + vi.mock()"]
+        Model["Model (.model.js — Sequelize)"]
+    end
+
+    subgraph Infra["Não testado diretamente"]
+        MySQL[("MySQL")]
+    end
+
+    Browser --> Routes
+    Routes --> Middleware
+    Middleware --> Controller
+    Controller --> Service
+    Service --> Model
+    Model --> MySQL
+```
+
+Cada camada tem um tipo de teste adequado:
+- **E2E**: testa o fluxo completo do ponto de vista do usuário
+- **Integração**: testa HTTP — rotas, status codes, corpo da resposta — com services mockados
+- **Unitário**: testa a lógica de negócio isolada do banco com `vi.mock()`
+- **Mutação**: verifica a qualidade dos testes unitários tentando quebrar o código
+
+---
+
+## Lições Aprendidas (N2 e N3)
+
+**Unitários:** A maior dificuldade foi entender que mockar não é trapacear — é isolar. No começo eu queria que o teste usasse o banco real, mas aí o teste deixava de ser unitário e passava a depender do ambiente. Com `vi.mock()` aprendi que posso testar a lógica de negócio do service sem nenhuma infraestrutura.
+
+**Integração:** Os testes de integração com Supertest mostraram que a lógica do controller é separada do service de um jeito que eu não percebia antes. Um teste unitário do service não testa se o status HTTP está certo — isso é trabalho do teste de integração.
+
+**E2E:** O Playwright foi o mais difícil de configurar porque precisa de servidor rodando, banco e dados. Descobri que formulários que parecem simples no navegador têm detalhes que só aparecem no E2E — o formulário de cadastro começa oculto e só aparece depois de clicar numa aba, o que não tem nenhum impacto nos testes unitários mas quebra um teste E2E mal escrito.
+
+**Mutação:** O Stryker foi o mais revelador. Os testes do service atingiram 100% de mutation score, o que significa que cada asserção realmente contribui para detectar um problema. Já os testes do controller ficaram em ~32% porque eu mockava o service retornando array vazio nos testes de `showMyChallenges`, então o corpo do `forEach` nunca executava e todos os mutantes dentro dele sobreviviam. Isso ensinou que cobertura de linhas não é o mesmo que cobertura de comportamento.
+
+---
+
+## Análise de Mutantes
+
+Rodei o Stryker nos arquivos `auth.service.js`, `solutions.service.js` e `solutions.controller.js`.
+
+| Arquivo | Mutantes | Eliminados | Sobreviveram | Score |
+|---------|----------|------------|--------------|-------|
+| auth.service.js | 23 | 23 | 0 | 100% |
+| solutions.service.js | 16 | 16 | 0 | 100% |
+| solutions.controller.js | 154 | 59 | 95 | 32% |
+
+### Mutante 1 — Operador `>` na comparação de score (linha 69)
+
+```js
+// código original
+if ((s.score || 0) > entry.melhorScore) {
+  entry.melhorScore = s.score || 0;
+}
+
+// mutação gerada pelo Stryker
+if ((s.score || 0) >= entry.melhorScore) {  // sobreviveu
+```
+
+**Por que sobreviveu:** o teste de `showMyChallenges` mocka `getSolutionsByUser` retornando array vazio `[]`. O `forEach` nunca executa, então nenhuma mutação dentro dele é detectada pelos testes.
+
+**Como matar:** adicionar um teste com 2 soluções onde a segunda tem score menor, verificando que `melhorScore` não é sobrescrito.
+
+### Mutante 2 — Operador `||` no fallback de desafio (linha 60)
+
+```js
+// código original
+challenge: DEMO_CHALLENGES[cid] || { id: cid, title: `Desafio #${cid}` }
+
+// mutação gerada pelo Stryker
+challenge: DEMO_CHALLENGES[cid] && { id: cid, title: `Desafio #${cid}` }  // sobreviveu
+```
+
+**Por que sobreviveu:** mesma razão — o `forEach` não executa nos testes atuais, então essa linha nunca é avaliada durante os testes.
+
+**Como matar:** adicionar um teste onde `getSolutionsByUser` retorna uma solução com `challengeId` que não existe no `DEMO_CHALLENGES`, verificando que o título do desafio fallback aparece como `Desafio #X`.
+
+### Por que os services têm 100%
+
+Os services têm 100% de mutation score porque cada função tem testes dedicados que verificam exatamente o que foi passado pro model (`toHaveBeenCalledWith`). Quando o Stryker muda `'pending'` por `''` no `submitSolution`, o teste `expect(result.status).toBe('pending')` pega. Quando muda `userId: 42` para `userId: 0` no findAll, o teste `toHaveBeenCalledWith({ where: { userId: 42 } })` pega.
+
+---
+
 ## Como rodar
 
 ```bash
@@ -189,6 +289,7 @@ npm run test:run        # unitários + integração
 npm run test:coverage   # com cobertura
 npx playwright install chromium
 npm run test:e2e        # E2E
+npm run test:mutation   # mutation testing com Stryker
 ```
 
 Arquivo `.env` necessário:
