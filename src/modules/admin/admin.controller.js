@@ -8,6 +8,8 @@ import ChallengeModel from '../challenges/challenges.model.js';
 import { getAllCategories, createCategory, deleteCategory } from '../category/categories.service.js';
 import { getAllChallenges, createChallenge, deleteChallenge } from '../challenges/challenges.service.js';
 import { deleteComment } from '../comments/comments.service.js';
+import { createLesson, getLessons } from '../lessons/lessons.service.js';
+import LessonModel from '../lessons/lessons.model.js';
 
 const challengeUploadDir = 'src/public/uploads/challenges/';
 if (!fs.existsSync(challengeUploadDir)) {
@@ -212,6 +214,37 @@ export const excluirComentario = async (req, res) => {
     req.flash('error', err.message);
   }
   res.redirect('/admin/comentarios');
+};
+
+export const showLicoes = async (req, res) => {
+  try {
+    const licoes = await getLessons();
+    res.render('admin-licoes', { title: 'Admin — Lições', licoes });
+  } catch (err) {
+    req.flash('error', err.message);
+    res.redirect('/admin');
+  }
+};
+
+export const criarLicao = async (req, res) => {
+  try {
+    await createLesson(req.body);
+    req.flash('success', 'Lição criada com sucesso!');
+  } catch (err) {
+    req.flash('error', err.message);
+  }
+  res.redirect('/admin/licoes');
+};
+
+export const excluirLicao = async (req, res) => {
+  try {
+    const licao = await LessonModel.findByPk(req.params.id);
+    if (licao) await licao.destroy();
+    req.flash('success', 'Lição removida.');
+  } catch (err) {
+    req.flash('error', err.message);
+  }
+  res.redirect('/admin/licoes');
 };
 
 export const setupAdmin = async (req, res) => {

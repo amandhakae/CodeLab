@@ -5,6 +5,7 @@ import {
   showCategorias, criarCategoria, excluirCategoria,
   showUsuarios, alterarRole,
   showComentarios, excluirComentario,
+  showLicoes, criarLicao, excluirLicao,
   setupAdmin,
   uploadChallenge,
 } from './admin.controller.js';
@@ -53,5 +54,9 @@ router.post('/usuarios/:id/role', alterarRole);
 
 router.get('/comentarios', showComentarios);
 router.post('/comentarios/:id/excluir', excluirComentario);
+
+router.get('/licoes', showLicoes);
+router.post('/licoes', criarLicao);
+router.post('/licoes/:id/excluir', excluirLicao);
 
 export default router;
