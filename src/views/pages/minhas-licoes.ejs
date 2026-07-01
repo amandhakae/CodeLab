@@ -1,0 +1,65 @@
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <ul>
+    <li><a href="/dashboard">Explorar</a></li>
+    <li><a href="/desafio/meus">Meus Desafios</a></li>
+    <li><a href="/licoes/explorar" class="nav-ativo">SkillUp</a></li>
+    <li><a href="/rankings">Rankings</a></li>
+    <li><a href="/comunidade">Comunidade</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <% if (user && user.photo) { %>
+      <img src="<%= user.photo %>" alt="foto" class="avatar-nav">
+    <% } else { %>
+      <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <% } %>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="meus-desafios-page">
+
+  <div class="meus-header">
+    <h1>Minhas Lições</h1>
+    <p>Lições que você já concluiu</p>
+  </div>
+
+  <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
+    <a href="/licoes/explorar" class="btn-tentar-novo">Ver todas as lições</a>
+  </div>
+
+  <% if (concluidas && concluidas.length > 0) { %>
+
+    <div class="meus-stats">
+      <div class="stat-card">
+        <div class="stat-valor"><%= concluidas.length %></div>
+        <div class="stat-label">Lições concluídas</div>
+      </div>
+    </div>
+
+    <div class="meus-lista">
+      <% concluidas.forEach(function(prog) { %>
+        <div class="meus-card" style="align-items:center;">
+          <div class="meus-card-info">
+            <h3>Lição #<%= prog.lessonId %></h3>
+            <% if (prog.completedAt) { %>
+              <span class="meus-categoria">Concluída em <%= new Date(prog.completedAt).toLocaleDateString('pt-BR') %></span>
+            <% } %>
+          </div>
+          <div style="margin-left:auto;">
+            <span class="status-pill accepted">✅ Concluída</span>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+  <% } else { %>
+    <div class="meus-vazio">
+      <div class="vazio-icone">📖</div>
+      <h2>Nenhuma lição concluída ainda</h2>
+      <p>Explore as lições disponíveis e comece a aprender!</p>
+      <a href="/licoes/explorar" class="btn-explorar">Ver lições</a>
+    </div>
+  <% } %>
+
+</div>

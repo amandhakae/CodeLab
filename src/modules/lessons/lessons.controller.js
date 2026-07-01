@@ -61,3 +61,30 @@ export const showMyLessons = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const showLessons = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const todasLicoes = await getLessons();
+    const concluidas = await getCompletedLessons(userId);
+    const idsConcluidos = new Set(concluidas.map(c => String(c.lessonId)));
+    const licoes = todasLicoes.map(l => ({
+      ...l.dataValues,
+      concluida: idsConcluidos.has(String(l.id)),
+    }));
+    res.render('licoes', { title: 'SkillUp — Lições', licoes });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const concludeWeb = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    await markAsCompleted(userId, req.params.id);
+    req.flash('success', 'Lição marcada como concluída!');
+  } catch (err) {
+    req.flash('error', err.message);
+  }
+  res.redirect('/licoes');
+};

@@ -1,0 +1,79 @@
+<nav>
+  <div class="logo">&lt;/&gt; CodeLab</div>
+  <ul>
+    <li><a href="/dashboard">Explorar</a></li>
+    <li><a href="/desafio/meus">Meus Desafios</a></li>
+    <li><a href="/licoes/explorar" class="nav-ativo">SkillUp</a></li>
+    <li><a href="/rankings">Rankings</a></li>
+    <li><a href="/comunidade">Comunidade</a></li>
+  </ul>
+  <a href="/perfil" class="usuario">
+    <% if (user && user.photo) { %>
+      <img src="<%= user.photo %>" alt="foto" class="avatar-nav">
+    <% } else { %>
+      <div class="avatar-inicial"><%= user ? user.name.charAt(0).toUpperCase() : '?' %></div>
+    <% } %>
+    <%= user ? user.name : 'Perfil' %>
+  </a>
+</nav>
+
+<div class="meus-desafios-page">
+
+  <div class="meus-header">
+    <h1>SkillUp — Lições</h1>
+    <p>Aprenda no seu ritmo e marque as lições que já concluiu</p>
+  </div>
+
+  <% if (messages && messages.success) { %>
+    <div class="flash-success"><%= messages.success %></div>
+  <% } %>
+  <% if (messages && messages.error) { %>
+    <div class="flash-error"><%= messages.error %></div>
+  <% } %>
+
+  <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
+    <a href="/licoes/minhas" class="btn-tentar-novo">Ver minhas lições concluídas</a>
+  </div>
+
+  <% if (licoes && licoes.length > 0) { %>
+    <div class="meus-lista">
+      <% licoes.forEach(function(licao) { %>
+        <div class="meus-card" style="align-items:center;">
+
+          <div class="meus-card-nivel">
+            <%
+              var lvl = licao.level || 'iniciante';
+            %>
+            <span class="badge <%= lvl %>"><%= licao.level %></span>
+          </div>
+
+          <div class="meus-card-info">
+            <h3><%= licao.title %></h3>
+            <span class="meus-categoria"><%= licao.category %></span>
+            <% if (licao.description) { %>
+              <p style="font-size:13px; color:#888; margin-top:4px;"><%= licao.description %></p>
+            <% } %>
+          </div>
+
+          <div style="margin-left:auto;">
+            <% if (licao.concluida) { %>
+              <span class="status-pill accepted">✅ Concluída</span>
+            <% } else { %>
+              <form action="/licoes/<%= licao.id %>/concluir-web" method="POST" style="display:inline;">
+                <button type="submit" class="btn-tentar-novo">Marcar como concluída</button>
+              </form>
+            <% } %>
+          </div>
+
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="meus-vazio">
+      <div class="vazio-icone">📚</div>
+      <h2>Nenhuma lição cadastrada ainda</h2>
+      <p>Em breve novas lições estarão disponíveis aqui.</p>
+    </div>
+  <% } %>
+
+</div>

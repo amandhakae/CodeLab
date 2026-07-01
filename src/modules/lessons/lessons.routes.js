@@ -6,6 +6,8 @@ import {
   conclude,
   completedByUser,
   showMyLessons,
+  showLessons,
+  concludeWeb,
 } from './lessons.controller.js';
 
 function requireAuth(req, res, next) {
@@ -16,7 +18,9 @@ function requireAuth(req, res, next) {
 const router = Router();
 
 router.get('/minhas', requireAuth, showMyLessons);
+router.get('/explorar', requireAuth, showLessons);
 router.get('/usuario/:userId/concluidas', completedByUser);
+router.post('/:id/concluir-web', requireAuth, concludeWeb);
 router.post('/', create);
 router.get('/', list);
 router.get('/:id', getOne);
