@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">20% </span>
+                <span class="strong">13.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>12/60</span>
+                <span class='fraction'>8/60</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">37.5% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>9/24</span>
+                <span class='fraction'>0/24</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">21.56% </span>
+                <span class="strong">13.72% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>11/51</span>
+                <span class='fraction'>7/51</span>
             </div>
         
             
@@ -225,11 +225,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -249,7 +249,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -376,11 +376,11 @@ export const showDashboard = async (req, res) =&gt; {
   let challenges;
   try {
     const dbChallenges = await ChallengeModel.findAll({ order: [['createdAt', 'DESC']] });
-    if (dbChallenges.length &gt; 0) {
-      const categorias = await CategoryModel.findAll();
-      const catMap = {};
-      categorias.forEach(<span class="fstat-no" title="function not covered" >c </span>=&gt; { <span class="cstat-no" title="statement not covered" >catMap[c.id] = c.name; </span>});
-      challenges = dbChallenges.map((c, i) =&gt; ({
+<span class="cstat-no" title="statement not covered" >    if (dbChallenges.length &gt; 0) {</span>
+      const categorias = <span class="cstat-no" title="statement not covered" >await CategoryModel.findAll();</span>
+      const catMap = <span class="cstat-no" title="statement not covered" >{};</span>
+<span class="cstat-no" title="statement not covered" >      categorias.forEach(<span class="fstat-no" title="function not covered" >c </span>=&gt; { <span class="cstat-no" title="statement not covered" >catMap[c.id] = c.name; </span>});</span>
+<span class="cstat-no" title="statement not covered" >      challenges = dbChallenges.map(<span class="fstat-no" title="function not covered" >(c</span>, i) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
         id: c.id,
         title: c.title,
         description: c.description,
@@ -391,7 +391,7 @@ export const showDashboard = async (req, res) =&gt; {
         commentsCount: c.commentsCount || 0,
         ordem: i + 1,
       }));
-    } else <span class="missing-if-branch" title="else path not taken" >E</span>{
+    } else {
 <span class="cstat-no" title="statement not covered" >      challenges = Object.values(DEMO_CHALLENGES).map(<span class="fstat-no" title="function not covered" >(c</span>, i) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
         ...c,
         image: null,
@@ -400,7 +400,7 @@ export const showDashboard = async (req, res) =&gt; {
       }));
     }
   } catch {
-<span class="cstat-no" title="statement not covered" >    challenges = Object.values(DEMO_CHALLENGES).map(<span class="fstat-no" title="function not covered" >(c</span>, i) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+    challenges = Object.values(DEMO_CHALLENGES).map((c, i) =&gt; ({
       ...c,
       image: null,
       commentsCount: 0,
@@ -523,7 +523,7 @@ export const showComunidade = <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-30T03:34:59.799Z
+                at 2026-06-30T23:56:12.788Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

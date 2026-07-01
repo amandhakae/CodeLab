@@ -5,8 +5,8 @@ export default {
     configFile: 'vitest.config.js',
   },
   mutate: [
-    'src/modules/solutions/solutions.service.js',
-    'src/modules/solutions/solutions.controller.js',
+    'src/modules/lessons/lessons.service.js',
+    'src/modules/lessons/lessons.controller.js',
     'src/modules/auth/auth.service.js',
   ],
   coverageAnalysis: 'perTest',

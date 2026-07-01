@@ -1,183 +1,169 @@
-# Relatorio N3 — CodeLab
+# Relatorio N3 — CodeLab SkillUp
 
 ## Funcionalidade Implementada
 
-Escolhi o módulo de submissão de soluções porque sem isso o CodeLab era só uma lista de desafios sem nenhuma interação real. O usuário precisa conseguir mandar código e receber uma nota.
+A funcionalidade escolhida para a N3 foi o módulo SkillUp — cadastro de lições e marcação de lições como concluídas. A ideia é que o sistema tenha lições de conteúdo (tipo "Introdução ao TDD", "Mocks com Vitest") e o usuário possa marcar cada uma como concluída para acompanhar seu progresso.
 
-O fluxo básico é: usuário está autenticado, abre um desafio, cola o código e manda. O sistema cria a solução com status `pending`, gera um score entre 70 e 100 e define como `accepted` se for 80 ou mais, ou `rejected` se for menos. Isso tudo vai pro banco.
+Sem isso o CodeLab era só uma lista de desafios de código, sem nenhum conteúdo educativo estruturado.
 
-Regras que precisei implementar:
-- não pode submeter sem estar logado
-- código em branco retorna erro sem criar nada no banco
-- linguagem padrão é javascript quando não informada
-- updateScore precisa lançar erro se o id da solução não existir
+O que precisei implementar:
+- cadastrar lição com título, descrição, conteúdo, categoria e nível
+- nível padrão é `iniciante` quando não informado
+- título não pode ser vazio — retorna erro antes de tocar no banco
+- marcar lição como concluída vincula o userId ao lessonId
+- não cria duplicata se o usuário já concluiu a lição
+- buscar lições concluídas de um usuário específico
+- rotas de marcação e listagem pessoal exigem autenticação
 
-O módulo ficou em 4 arquivos: model, service, controller e routes. Tentei manter o service sem nenhuma lógica de HTTP (isso é papel do controller) e o model sem lógica nenhuma, só a definição da tabela.
+O módulo ficou em 4 arquivos: `lessons.model.js`, `lesson_progress.model.js`, `lessons.service.js`, `lessons.controller.js` e `lessons.routes.js`.
 
 ---
 
 ## Como apliquei o TDD
 
-No começo eu escrevi o teste e rodei sem ter implementado nada, só pra ver falhar de verdade. Parece bobo mas ajuda a confirmar que o teste está testando algo de verdade.
+Escrevi cada teste antes da função existir. O primeiro que fiz foi o de título vazio — porque é o caso mais simples de validação e me forçou a pensar na interface da função antes de implementar qualquer coisa.
 
-**Exemplo — fase Red:**
+**Fase Red:**
 
 ```js
-it('deve usar javascript como linguagem padrão quando não informada', async () => {
-  SolutionModel.create.mockResolvedValue({ id: 1, status: 'pending' });
-
-  await submitSolution({ userId: 1, challengeId: 1, code: 'x' });
-
-  expect(SolutionModel.create).toHaveBeenCalledWith(
-    expect.objectContaining({ language: 'javascript' }),
-  );
+it('lança erro quando título estiver vazio', async () => {
+  await expect(createLesson({ title: '' })).rejects.toThrow('Título é obrigatório');
+  expect(LessonModel.create).not.toHaveBeenCalled();
 });
 ```
 
-Esse teste falhou porque `submitSolution` não existia. Aí implementei o mínimo:
+Esse teste falhou porque `createLesson` não existia. Depois escrevi o mínimo pra passar:
 
 ```js
-export const submitSolution = async ({ userId, challengeId, code, language = 'javascript' }) => {
-  return await SolutionModel.create({ userId, challengeId, code, language, status: 'pending' });
+export const createLesson = async ({ title, description, content, category, level = 'iniciante' }) => {
+  if (!title || !title.trim()) throw new Error('Título é obrigatório');
+  return await LessonModel.create({ title, description, content, category, level });
 };
 ```
 
-Ficou verde. Depois disso reorganizei o controller pra separar a criação da solução da lógica de pontuação — sem os testes eu provavelmente teria deixado tudo num função só.
+**Refactor:** depois de todos os testes verdes, separei o modelo de progresso (`LessonProgressModel`) do modelo de lição (`LessonModel`) em arquivos distintos. Os testes existentes garantiram que a separação não quebrou nada.
 
 ---
 
 ## Testes unitários
 
-### submitSolution cria com status pending
+### createLesson salva com título e categoria
 
 ```js
-it('deve criar uma solução com status pending', async () => {
-  const data = { userId: 1, challengeId: 2, code: 'return a + b;' };
-  SolutionModel.create.mockResolvedValue({ id: 1, ...data, language: 'javascript', status: 'pending' });
+it('salva a lição com título e categoria', async () => {
+  const data = { title: 'Introdução ao TDD', category: 'Testes', content: 'Conteúdo...' };
+  LessonModel.create.mockResolvedValue({ id: 1, ...data, level: 'iniciante' });
 
-  const result = await submitSolution(data);
+  const result = await createLesson(data);
 
-  expect(SolutionModel.create).toHaveBeenCalledWith({ ...data, language: 'javascript', status: 'pending' });
-  expect(result.status).toBe('pending');
+  expect(LessonModel.create).toHaveBeenCalledWith(expect.objectContaining({ title: 'Introdução ao TDD' }));
+  expect(result.level).toBe('iniciante');
 });
 ```
 
-O `vi.mock()` no topo do arquivo substitui o SolutionModel por uma versão fake. Assim o teste não precisa de banco nenhum e roda em milissegundos.
+O `vi.mock('../lessons.model.js')` substitui o Sequelize por uma versão controlada. O teste não abre banco nenhum.
 
-### updateScore lança erro quando id não existe
+### markAsCompleted não cria duplicata
 
 ```js
-it('deve lançar erro se solução não for encontrada', async () => {
-  SolutionModel.findByPk.mockResolvedValue(null);
+it('retorna o registro existente sem criar duplicata', async () => {
+  LessonModel.findByPk.mockResolvedValue({ id: 1 });
+  const existente = { id: 5, userId: 2, lessonId: 1 };
+  LessonProgressModel.findOne.mockResolvedValue(existente);
 
-  await expect(updateScore(99, { score: 5 })).rejects.toThrow('Solução não encontrada');
+  const result = await markAsCompleted(2, 1);
+
+  expect(LessonProgressModel.create).not.toHaveBeenCalled();
+  expect(result).toBe(existente);
 });
 ```
 
-Esse foi importante porque sem ele eu poderia ter esquecido de tratar o caso em que o findByPk retorna null — o que causaria um erro genérico muito pior em produção.
+Esse teste foi importante porque sem ele eu poderia ter deixado o usuário criar múltiplos registros pra mesma lição.
 
-### getSolutionsByUser chama findAll com filtro certo
+### getLessonById lança erro quando não existe
 
 ```js
-it('deve chamar findAll com where userId correto', async () => {
-  SolutionModel.findAll.mockResolvedValue([]);
+test('lança erro quando lição não existe no banco', async () => {
+  LessonModel.findByPk.mockResolvedValue(null);
 
-  await getSolutionsByUser(42);
-
-  expect(SolutionModel.findAll).toHaveBeenCalledWith({ where: { userId: 42 } });
+  await expect(getLessonById(99)).rejects.toThrow('Lição não encontrada');
 });
 ```
 
-Esse teste parece simples mas é exatamente o tipo de coisa que quebra quando alguém refatora e passa o id errado pro where.
+Mesmo padrão do updateScore que fiz na N2 — se o findByPk retorna null, o service lança erro com mensagem clara em vez de deixar explodir mais pra frente.
 
 ---
 
 ## Testes de integração
 
-Usei Supertest pra disparar requisições HTTP reais no app, com os services mockados. Assim testo o controller e as rotas sem precisar de banco.
+Usei Supertest pra testar as rotas HTTP com os services mockados.
 
-### POST /desafio/ retorna 201
+### POST /licoes cria e retorna 201
 
 ```js
-it('deve retornar 201 ao submeter solução válida', async () => {
-  submitSolution.mockResolvedValue({ id: 1, userId: 1, challengeId: 2, status: 'pending' });
+it('POST /licoes cria lição e retorna 201', async () => {
+  createLesson.mockResolvedValue({ id: 1, title: 'TDD Básico', level: 'iniciante' });
 
   const res = await request(app)
-    .post('/desafio/')
-    .send({ userId: 1, challengeId: 2, code: 'return a + b;' });
+    .post('/licoes')
+    .send({ title: 'TDD Básico', category: 'Testes', content: 'Conteúdo da lição' });
 
   expect(res.status).toBe(201);
   expect(res.body).toHaveProperty('id', 1);
 });
 ```
 
-### PATCH /desafio/:id/score retorna 404 quando não acha a solução
+### GET /licoes/minhas sem login redireciona
 
 ```js
-it('deve retornar 404 quando solução não for encontrada', async () => {
-  updateScore.mockRejectedValue(new Error('Solução não encontrada'));
+it('GET /licoes/minhas sem login redireciona para /', async () => {
+  const res = await request(app).get('/licoes/minhas');
 
-  const res = await request(app)
-    .patch('/desafio/999/score')
-    .send({ score: 90, status: 'accepted' });
-
-  expect(res.status).toBe(404);
-  expect(res.body).toHaveProperty('message', 'Solução não encontrada');
+  expect(res.status).toBe(302);
+  expect(res.headers.location).toBe('/');
 });
 ```
 
-Esse teste garante que o controller captura a exceção do service e devolve 404, não 500.
+Esse teste confirma que o middleware `requireAuth` está na rota certa. Sem ele qualquer pessoa acessaria os dados do usuário.
 
 ---
 
-## Diagrama — fluxo de submissão
+## Diagrama de Sequência — Marcar lição como concluída
 
 ```mermaid
 sequenceDiagram
     actor U as Usuário
     participant B as Browser
-    participant R as Router /desafio/:id/submit
+    participant R as Router /licoes/:id/concluir
     participant M as Middleware requireAuth
-    participant C as solutions.controller.js
-    participant S as solutions.service.js
-    participant DB as MySQL (SolutionModel)
+    participant C as lessons.controller.js
+    participant S as lessons.service.js
+    participant L as LessonModel
+    participant P as LessonProgressModel
 
-    U->>B: Clica em "Enviar Solução"
-    B->>R: POST /desafio/1/submit {code, language}
+    U->>B: Clica em "Marcar como concluída"
+    B->>R: POST /licoes/3/concluir
     R->>M: Verificar sessão
     alt Não autenticado
         M-->>B: redirect /
     else Autenticado
-        M->>C: submitAndGrade(req, res)
-        C->>S: submitSolution({userId, challengeId, code})
-        S->>DB: SolutionModel.create(...)
-        DB-->>S: {id, status: 'pending'}
-        S-->>C: solução criada
-        C->>S: updateScore(solution.id, {score, status})
-        S->>DB: solution.update({score, status})
-        DB-->>S: solução atualizada
-        S-->>C: solução com score
-        C-->>B: redirect /desafio/1 + flash message
+        M->>C: conclude(req, res)
+        C->>S: markAsCompleted(userId, lessonId)
+        S->>L: LessonModel.findByPk(lessonId)
+        L-->>S: lição encontrada
+        S->>P: LessonProgressModel.findOne({userId, lessonId})
+        alt Já concluída
+            P-->>S: registro existente
+            S-->>C: retorna existente
+        else Nova conclusão
+            P-->>S: null
+            S->>P: LessonProgressModel.create({userId, lessonId})
+            P-->>S: progresso criado
+            S-->>C: novo registro
+        end
+        C-->>B: 200 JSON com progresso
     end
 ```
-
----
-
-## Testes E2E com Playwright
-
-Os E2E abrem o Chrome de verdade e simulam o que o usuário faria. Implementei 6 testes no total.
-
-Autenticação (3 testes):
-- página de login carrega com formulário visível
-- senhas diferentes no cadastro redirecionam de volta
-- credenciais erradas no login redirecionam de volta
-
-Soluções (3 testes):
-- dashboard carrega com os cards de desafios
-- tentar acessar /desafio/:id sem login redireciona
-- tentar acessar /desafio/meus sem login redireciona
-
-O principal problema foi que os testes E2E precisam de servidor rodando com banco real. Pra evitar depender de dados específicos no banco, escolhi testar só os fluxos que funcionam sem seed: erros de formulário e redirecionamento de rotas protegidas.
 
 ---
 
@@ -192,7 +178,7 @@ graph TD
     subgraph HTTP["Integração — Supertest"]
         Routes["Routes (.routes.js)"]
         Controller["Controller (.controller.js)"]
-        Middleware["Middleware (requireAuth)"]
+        Middleware["requireAuth"]
     end
 
     subgraph Business["Unitário — Vitest + vi.mock()"]
@@ -215,69 +201,76 @@ graph TD
     Model --> MySQL
 ```
 
-Cada camada tem um tipo de teste adequado:
-- **E2E**: testa o fluxo completo do ponto de vista do usuário
-- **Integração**: testa HTTP — rotas, status codes, corpo da resposta — com services mockados
-- **Unitário**: testa a lógica de negócio isolada do banco com `vi.mock()`
-- **Mutação**: verifica a qualidade dos testes unitários tentando quebrar o código
+---
+
+## Testes E2E com Playwright
+
+Implementei 6 testes E2E no total, divididos em autenticação e navegação protegida.
+
+Autenticação (3 testes):
+- página de login carrega com formulário visível
+- senhas diferentes no cadastro redirecionam de volta para /
+- credenciais inválidas no login redirecionam para /
+
+Navegação protegida (3 testes):
+- dashboard carrega com os cards de desafios após login
+- acessar rota protegida sem autenticação redireciona
+- acessar `/desafio/meus` sem autenticação redireciona
+
+O desafio nos E2E foi que eles precisam de servidor real rodando com banco. Optei por testar fluxos que não dependem de dados pré-existentes — erros de formulário e proteção de rotas — pra que os testes sejam autônomos.
 
 ---
 
 ## Lições Aprendidas (N2 e N3)
 
-**Unitários:** A maior dificuldade foi entender que mockar não é trapacear — é isolar. No começo eu queria que o teste usasse o banco real, mas aí o teste deixava de ser unitário e passava a depender do ambiente. Com `vi.mock()` aprendi que posso testar a lógica de negócio do service sem nenhuma infraestrutura.
+**Unitários:** O mais difícil foi entender quando mockar faz sentido. No começo parecia errado simular o banco — parecia que o teste não estaria testando nada de verdade. Mas aí percebi que o unitário testa a lógica, não a infraestrutura. O mock do `LessonProgressModel.findOne` no teste de duplicata foi o que me fez entender isso: o teste verificou que a função NÃO chama `create` quando já existe um registro, sem precisar de banco real pra provar isso.
 
-**Integração:** Os testes de integração com Supertest mostraram que a lógica do controller é separada do service de um jeito que eu não percebia antes. Um teste unitário do service não testa se o status HTTP está certo — isso é trabalho do teste de integração.
+**Integração:** Os testes com Supertest mostraram que o controller e as rotas têm comportamentos que os testes unitários não cobrem. Um exemplo claro: a proteção de rotas com `requireAuth`. Esse middleware não é testado pelos unitários do service — só aparece quando a requisição HTTP passa pelo router de verdade.
 
-**E2E:** O Playwright foi o mais difícil de configurar porque precisa de servidor rodando, banco e dados. Descobri que formulários que parecem simples no navegador têm detalhes que só aparecem no E2E — o formulário de cadastro começa oculto e só aparece depois de clicar numa aba, o que não tem nenhum impacto nos testes unitários mas quebra um teste E2E mal escrito.
+**E2E:** O Playwright abriu uma perspectiva diferente. O formulário de cadastro começa oculto no HTML e só aparece depois de clicar em uma aba. Isso não tem nenhum impacto nos testes unitários mas quebra um teste E2E se você não clicar na aba antes de preencher. São detalhes que só aparecem quando você testa como usuário.
 
-**Mutação:** O Stryker foi o mais revelador. Os testes do service atingiram 100% de mutation score, o que significa que cada asserção realmente contribui para detectar um problema. Já os testes do controller ficaram em ~32% porque eu mockava o service retornando array vazio nos testes de `showMyChallenges`, então o corpo do `forEach` nunca executava e todos os mutantes dentro dele sobreviviam. Isso ensinou que cobertura de linhas não é o mesmo que cobertura de comportamento.
+**Mutação:** O Stryker mostrou que cobertura de linhas e mutation score são medidas diferentes. O service ficou com 88% de mutation score — os 12% que sobreviveram são relacionados à lógica de verificação de duplicata no `markAsCompleted`. Já o auth.service ficou em 100% porque cada asserção captura exatamente a mutação correspondente.
 
 ---
 
 ## Análise de Mutantes
 
-Rodei o Stryker nos arquivos `auth.service.js`, `solutions.service.js` e `solutions.controller.js`.
+Rodei o Stryker em `lessons.service.js`, `lessons.controller.js` e `auth.service.js`.
 
-| Arquivo | Mutantes | Eliminados | Sobreviveram | Score |
-|---------|----------|------------|--------------|-------|
+| Arquivo | Mutantes | Mortos | Sobreviveram | Score |
+|---------|----------|--------|--------------|-------|
 | auth.service.js | 23 | 23 | 0 | 100% |
-| solutions.service.js | 16 | 16 | 0 | 100% |
-| solutions.controller.js | 154 | 59 | 95 | 32% |
+| lessons.service.js | 34 | 30 | 4 | 88% |
+| lessons.controller.js | 27 | 20 | 7 | 74% |
 
-### Mutante 1 — Operador `>` na comparação de score (linha 69)
-
-```js
-// código original
-if ((s.score || 0) > entry.melhorScore) {
-  entry.melhorScore = s.score || 0;
-}
-
-// mutação gerada pelo Stryker
-if ((s.score || 0) >= entry.melhorScore) {  // sobreviveu
-```
-
-**Por que sobreviveu:** o teste de `showMyChallenges` mocka `getSolutionsByUser` retornando array vazio `[]`. O `forEach` nunca executa, então nenhuma mutação dentro dele é detectada pelos testes.
-
-**Como matar:** adicionar um teste com 2 soluções onde a segunda tem score menor, verificando que `melhorScore` não é sobrescrito.
-
-### Mutante 2 — Operador `||` no fallback de desafio (linha 60)
+### Mutante 1 — Operador lógico no findOne (lessons.service.js)
 
 ```js
-// código original
-challenge: DEMO_CHALLENGES[cid] || { id: cid, title: `Desafio #${cid}` }
+// original
+const existing = await LessonProgressModel.findOne({ where: { userId, lessonId } });
+if (existing) return existing;
 
-// mutação gerada pelo Stryker
-challenge: DEMO_CHALLENGES[cid] && { id: cid, title: `Desafio #${cid}` }  // sobreviveu
+// mutação gerada
+if (!existing) return existing;  // sobreviveu
 ```
 
-**Por que sobreviveu:** mesma razão — o `forEach` não executa nos testes atuais, então essa linha nunca é avaliada durante os testes.
+**Por que sobreviveu:** o teste de duplicata verifica que `create` não foi chamado, mas não verifica o que foi retornado quando o registro já existe. Mudar `if (existing)` para `if (!existing)` não seria pego por essa asserção.
 
-**Como matar:** adicionar um teste onde `getSolutionsByUser` retorna uma solução com `challengeId` que não existe no `DEMO_CHALLENGES`, verificando que o título do desafio fallback aparece como `Desafio #X`.
+**Como matar:** adicionar `expect(result).toEqual(existente)` no teste de duplicata, verificando que o retorno é o registro existente e não `undefined`.
 
-### Por que os services têm 100%
+### Mutante 2 — Condição de validação do título (lessons.service.js)
 
-Os services têm 100% de mutation score porque cada função tem testes dedicados que verificam exatamente o que foi passado pro model (`toHaveBeenCalledWith`). Quando o Stryker muda `'pending'` por `''` no `submitSolution`, o teste `expect(result.status).toBe('pending')` pega. Quando muda `userId: 42` para `userId: 0` no findAll, o teste `toHaveBeenCalledWith({ where: { userId: 42 } })` pega.
+```js
+// original
+if (!title || !title.trim()) throw new Error('Título é obrigatório');
+
+// mutação gerada
+if (!title && !title.trim()) throw new Error('Título é obrigatório');  // sobreviveu
+```
+
+**Por que sobreviveu:** o teste passa `title: ''` (string vazia), onde `!title` já é `true`. Pra pegar essa mutação precisaria de um teste com `title: '   '` (só espaços), onde `!title` é `false` mas `!title.trim()` é `true` — só o `||` pegaria esse caso.
+
+**Como matar:** adicionar teste com `title: '   '` esperando o erro.
 
 ---
 
