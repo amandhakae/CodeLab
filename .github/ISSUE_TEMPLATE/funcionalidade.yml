@@ -1,0 +1,37 @@
+name: Funcionalidade
+description: Sugerir uma nova funcionalidade ou melhoria
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição
+      description: O que deve ser feito e por quê?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - auth
+        - user
+        - challenges
+        - solutions
+        - comments
+        - category
+        - admin
+        - general
+        - lessons
+        - Pipeline / CI
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Critérios de aceitação
+      description: Como saberemos que está pronto?
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
