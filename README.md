@@ -16,7 +16,13 @@ Plataforma de desafios de programação desenvolvida com Node.js aplicando TDD.
 npm install
 ```
 
-Criar arquivo `.env`:
+Copiar `.env.example` para `.env` e ajustar os valores (o `.env` não é versionado):
+
+```bash
+cp .env.example .env
+```
+
+Exemplo de conteúdo:
 
 ```
 PORT=3000
@@ -32,7 +38,10 @@ SESSION_SECRET=codelab_tdd
 
 ```bash
 npm run dev          # servidor com nodemon
-npm test             # testes (Vitest)
+npm test             # testes (Vitest, modo watch)
+npm run test:run     # testes unitários e de integração (execução única)
+npm run test:e2e     # testes E2E (Playwright; requer MySQL e .env)
+npm run test:mutation  # testes de mutação (Stryker)
 npm run test:coverage  # cobertura de código
 npm run lint         # ESLint
 ```
