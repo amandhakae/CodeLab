@@ -1,13 +1,13 @@
 # Dono padrão de todo o repositório
-*                    @amandhakae
+*                    @amandhakae @soficris
 
 # Pipeline e configuração de repositório
-/.github/            @amandhakae
+/.github/            @amandhakae @soficris
 
 # Código e testes
-/src/                @amandhakae
-/test/               @amandhakae
+/src/                @amandhakae @soficris
+/test/               @amandhakae @soficris
 
 # Dependências
-/package.json        @amandhakae
-/package-lock.json   @amandhakae
+/package.json        @amandhakae @soficris
+/package-lock.json   @amandhakae @soficris
