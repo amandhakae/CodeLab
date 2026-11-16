@@ -6,8 +6,8 @@ Registro das verificações exigidas pela atividade de Gerência de Configuraç�
 |---|------|----------------|--------|
 | 1 | Plano de GCS versionado como IC | [`docs/PLANO_GCS.md`](../PLANO_GCS.md) | OK |
 | 2 | Repositório acessível | Repositório público: https://github.com/amandhakae/CodeLab | OK |
-| 3 | Push direto na `main` recusado | Proteção da `main` com *Do not allow bypassing* (vale para admin). Este próprio arquivo só entrou via Pull Request porque o commit direto na `main` foi bloqueado. Saída do `git push` recusado: `push-recusado.png` | OK |
-| 4 | Par de revisão com acesso de escrita | `soficris` — colaboradora (Write) e Code Owner em `.github/CODEOWNERS` | OK |
+| 3 | Push direto na `main` recusado | Proteção da `main` com *Do not allow bypassing* (vale para admin). O GitHub recusa o commit direto (*"You can't commit to main because it is a protected branch"*); este arquivo só entrou via [PR #2](https://github.com/amandhakae/CodeLab/pull/2), bloqueado até a revisão do Code Owner | OK |
+| 4 | Par de revisão com acesso de escrita | [`@soficris`](https://github.com/soficris) — colaboradora (Write) e Code Owner em `.github/CODEOWNERS` | OK |
 | 5 | Environments `staging` e `production` | `staging` (branch `main`); `production` com **revisora obrigatória `amandhakae`** e sem bypass de admin — ver [Deployments](https://github.com/amandhakae/CodeLab/deployments) | OK |
 
 ## Regras de proteção da `main`
@@ -17,7 +17,7 @@ Registro das verificações exigidas pela atividade de Gerência de Configuraç�
 - Status check `test` (CI) obrigatório e branch atualizada
 - Sem bypass para administradores; force push e exclusão bloqueados
 
-## Saída esperada do push direto
+## Saída esperada do push direto via terminal
 
 ```
 $ git push origin main
