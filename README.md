@@ -70,3 +70,10 @@ test/
   integration/   testes Supertest
   setup.js       configuracao global
 ```
+
+## Gerência de Configuração (GCS)
+
+- Plano de GCS: [`docs/PLANO_GCS.md`](docs/PLANO_GCS.md)
+- Evidências: [`docs/evidencias/`](docs/evidencias/README.md)
+- A branch `main` é protegida: toda mudança entra por Pull Request com aprovação do Code Owner e CI verde.
+- Deploy: `staging` automático após merge na `main`; `production` exige aprovação da revisora obrigatória.
