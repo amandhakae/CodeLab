@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
   test:
@@ -65,3 +65,27 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  deploy-staging:
+    name: Deploy em staging
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy (simulado)
+        run: echo "Implantando ${{ github.sha }} em STAGING"
+
+  deploy-production:
+    name: Deploy em production
+    needs: deploy-staging
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy (simulado)
+        run: echo "Implantando ${{ github.sha }} em PRODUCTION (aprovado por revisora obrigatória)"
